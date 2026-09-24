@@ -32,6 +32,15 @@ Alarms like this one send a 24-bit EV1527 code. rtl_433 decodes those as
 backup decoder that reads the code at any transmitter speed from about 200 to 800 µs
 per pulse. Either way the alarm shows up as `Generic-Remote-<number>`.
 
+- Sainlogic SA68 12-in-1 weather station ([Amazon B0H4GFXGYS](https://www.amazon.com/dp/B0H4GFXGYS))
+
+Sainlogic uses the same outdoor sensor for the SA6, SA8 and SA68, and rtl_433 decodes
+it as `Sainlogic-SA8` (433.92 MHz): temperature, humidity, wind speed, gust,
+direction, rain total and battery. One search result claimed the SA68 transmits at
+915 MHz instead; Sainlogic's own pages don't say. If the station never shows up on the
+web page while the console is getting readings, it's probably a 915 MHz unit, and it
+needs a 915 MHz CC1101 as a second radio (the library supports two at once).
+
 ## Wiring
 
 Open `WIRING.html` in a browser for the diagram and a checklist.
