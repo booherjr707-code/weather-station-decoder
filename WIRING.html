@@ -1,0 +1,346 @@
+<meta charset="utf-8">
+<title>433 MHz Receiver Wiring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #f3f5f8;
+    --panel: #ffffff;
+    --ink: #1b2330;
+    --muted: #5b6676;
+    --line: #d5dbe4;
+    --board: #e8edf4;
+    --board-edge: #9aa6b6;
+    --accent: #1f7a8c;
+    --pin: #1b2330;
+    --w-3v3: #d62828;
+    --w-gnd: #3b4452;
+    --w-mosi: #2563eb;
+    --w-sck: #0891b2;
+    --w-miso: #16a34a;
+    --w-cs: #d4a000;
+    --w-gdo0: #ea580c;
+    --w-gdo2: #7c4dde;
+    --warn-bg: #fff4d6;
+    --warn-ink: #6b4a00;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11151c;
+      --panel: #1a2029;
+      --ink: #e6ebf2;
+      --muted: #9aa5b4;
+      --line: #2e3744;
+      --board: #232b36;
+      --board-edge: #5d6b7e;
+      --accent: #4cc3d9;
+      --pin: #e6ebf2;
+      --w-3v3: #ff5a5a;
+      --w-gnd: #aab4c2;
+      --w-mosi: #60a5fa;
+      --w-sck: #22d3ee;
+      --w-miso: #34d399;
+      --w-cs: #f1c232;
+      --w-gdo0: #fb923c;
+      --w-gdo2: #a78bfa;
+      --warn-bg: #3a2f10;
+      --warn-ink: #f6d98a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11151c;
+    --panel: #1a2029;
+    --ink: #e6ebf2;
+    --muted: #9aa5b4;
+    --line: #2e3744;
+    --board: #232b36;
+    --board-edge: #5d6b7e;
+    --accent: #4cc3d9;
+    --pin: #e6ebf2;
+    --w-3v3: #ff5a5a;
+    --w-gnd: #aab4c2;
+    --w-mosi: #60a5fa;
+    --w-sck: #22d3ee;
+    --w-miso: #34d399;
+    --w-cs: #f1c232;
+    --w-gdo0: #fb923c;
+    --w-gdo2: #a78bfa;
+    --warn-bg: #3a2f10;
+    --warn-ink: #f6d98a;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.55 "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    padding-inline: 16px;
+    padding-block: 28px 56px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 28px; }
+  h1, h2 {
+    font-family: "Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+  h1 { font-size: clamp(2rem, 6vw, 2.9rem); line-height: 1.05; }
+  h1 .mhz { color: var(--accent); }
+  h2 { font-size: 1.55rem; line-height: 1.15; }
+  p { margin: 0; max-width: 68ch; }
+  .muted { color: var(--muted); }
+  .mono, code { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; font-size: 0.92em; }
+  header { display: grid; gap: 8px; }
+  .eyebrow {
+    font: 600 0.78rem/1 "IBM Plex Mono", ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+  }
+
+  .parts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.92rem;
+  }
+
+  .diagram {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    overflow-x: auto;
+  }
+  .diagram svg { display: block; width: 100%; min-width: 680px; height: auto; }
+  svg text { font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; fill: var(--ink); }
+  svg .title { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 700; font-size: 22px; }
+  svg .sub { font-size: 11px; fill: var(--muted); }
+  svg .pinlbl { font-size: 13px; font-weight: 600; }
+  svg .alias { font-size: 11px; fill: var(--muted); font-weight: 500; }
+  svg .box { fill: var(--board); stroke: var(--board-edge); stroke-width: 1.5; }
+  svg .wire { fill: none; stroke-width: 3.2; stroke-linecap: round; }
+  svg .pin { fill: var(--pin); }
+  svg .ant { fill: none; stroke: var(--board-edge); stroke-width: 5; stroke-linecap: round; }
+  svg .sma { fill: var(--board-edge); }
+  .note {
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    border-radius: 8px;
+    padding: 12px 16px;
+    max-width: none;
+  }
+
+  .tables { display: grid; gap: 20px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px 8px;
+    display: grid;
+    gap: 6px;
+  }
+  .card h2 { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .card h2 small { font: 400 0.95rem "Source Sans 3", system-ui, sans-serif; color: var(--muted); }
+  .tablewrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th {
+    text-align: left;
+    font: 600 0.74rem/1 "IBM Plex Mono", ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    padding: 8px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.pin { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 600; white-space: nowrap; }
+  td.chk { width: 34px; }
+  td.chk input { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+  tr.done td:not(.chk) { opacity: 0.45; text-decoration: line-through; text-decoration-thickness: 1px; }
+  .sw {
+    display: inline-block; width: 12px; height: 12px; border-radius: 3px;
+    margin-right: 8px; vertical-align: -1px;
+  }
+  .progress { font-size: 0.95rem; color: var(--muted); }
+  button.reset {
+    font: inherit; font-size: 0.9rem;
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 6px;
+    padding: 3px 10px; cursor: pointer; margin-left: 8px;
+  }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  ol, ul { margin: 0; padding-left: 1.3em; display: grid; gap: 6px; max-width: 72ch; }
+  pre {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px 14px; overflow-x: auto; margin: 0;
+    font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace; font-size: 0.88rem;
+  }
+  section { display: grid; gap: 12px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">ESP32-WROOM-32 · CC1101 · 433.92 MHz</div>
+    <h1><span class="mhz">433</span> MHz Receiver Wiring</h1>
+    <p class="muted">Eight wires, straight from the ESP32 to the CC1101 radio. No breadboard rails needed. Tick each wire off as you go. Your ticks are saved in this browser.</p>
+    <div class="parts">
+      <span class="chip">ESP32-WROOM-32 dev board</span>
+      <span class="chip">DWEII CC1101 module, 433 MHz, with SMA antenna</span>
+      <span class="chip">8 jumper wires</span>
+    </div>
+  </header>
+
+  <div class="diagram" role="img" aria-label="Wiring diagram: ESP32 on the left, CC1101 radio on the right, eight straight wires between them.">
+    <svg viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg">
+      <!-- ESP32 -->
+      <rect class="box" x="30" y="40" width="200" height="360" rx="8"/>
+      <text x="60" y="210" class="title">ESP32</text>
+      <text x="60" y="228" class="sub">WROOM-32 dev board</text>
+      <text x="60" y="244" class="sub">(find pins by label)</text>
+      <g class="pinlbl">
+        <text x="218" y="84" text-anchor="end">3V3</text>
+        <text x="218" y="124" text-anchor="end">GND</text>
+        <text x="218" y="164" text-anchor="end">D23</text>
+        <text x="218" y="204" text-anchor="end">D18</text>
+        <text x="218" y="244" text-anchor="end">D19</text>
+        <text x="218" y="284" text-anchor="end">D5</text>
+        <text x="218" y="324" text-anchor="end">D13</text>
+        <text x="218" y="364" text-anchor="end">D4</text>
+      </g>
+      <text x="140" y="340" class="sub" text-anchor="end">other side ›</text>
+
+      <!-- CC1101 -->
+      <rect class="box" x="470" y="40" width="190" height="360" rx="8"/>
+      <rect class="sma" x="630" y="52" width="18" height="26" rx="3"/>
+      <line class="ant" x1="639" y1="52" x2="639" y2="8"/>
+      <text x="565" y="385" class="title" text-anchor="middle">CC1101</text>
+      <g class="pinlbl">
+        <text x="482" y="84">VCC</text>
+        <text x="482" y="124">GND</text>
+        <text x="482" y="164">MOSI <tspan class="alias">SI</tspan></text>
+        <text x="482" y="204">SCK <tspan class="alias">SCLK</tspan></text>
+        <text x="482" y="244">MISO <tspan class="alias">SO</tspan></text>
+        <text x="482" y="284">CSN <tspan class="alias">CS</tspan></text>
+        <text x="482" y="324">GDO0</text>
+        <text x="482" y="364">GDO2</text>
+      </g>
+
+      <!-- wires -->
+      <path class="wire" d="M230 80 H470" stroke="var(--w-3v3)"/>
+      <path class="wire" d="M230 120 H470" stroke="var(--w-gnd)"/>
+      <path class="wire" d="M230 160 H470" stroke="var(--w-mosi)"/>
+      <path class="wire" d="M230 200 H470" stroke="var(--w-sck)"/>
+      <path class="wire" d="M230 240 H470" stroke="var(--w-miso)"/>
+      <path class="wire" d="M230 280 H470" stroke="var(--w-cs)"/>
+      <path class="wire" d="M230 320 H470" stroke="var(--w-gdo0)"/>
+      <path class="wire" d="M230 360 H470" stroke="var(--w-gdo2)"/>
+
+      <g class="pin">
+        <circle cx="230" cy="80" r="4"/><circle cx="230" cy="120" r="4"/><circle cx="230" cy="160" r="4"/>
+        <circle cx="230" cy="200" r="4"/><circle cx="230" cy="240" r="4"/><circle cx="230" cy="280" r="4"/>
+        <circle cx="230" cy="320" r="4"/><circle cx="230" cy="360" r="4"/>
+        <circle cx="470" cy="80" r="4"/><circle cx="470" cy="120" r="4"/><circle cx="470" cy="160" r="4"/>
+        <circle cx="470" cy="200" r="4"/><circle cx="470" cy="240" r="4"/><circle cx="470" cy="280" r="4"/>
+        <circle cx="470" cy="320" r="4"/><circle cx="470" cy="360" r="4"/>
+      </g>
+    </svg>
+  </div>
+
+  <p class="note"><strong>3.3&nbsp;V only.</strong> The CC1101 is not 5&nbsp;V tolerant. VCC goes to the ESP32's <span class="mono">3V3</span> pin, never VIN or 5V. Screw the antenna on before you power it up. The board's pin order varies between batches, so go by the labels printed next to each pin, not by position.</p>
+
+  <div class="tables">
+    <div class="card">
+      <h2>CC1101 radio <small>8 wires, one per pin</small></h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th></th><th>CC1101 pin</th><th>Goes to</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="chk"><input type="checkbox" id="c1" aria-label="VCC wired"></td><td class="pin"><span class="sw" style="background:var(--w-3v3)"></span>VCC</td><td class="pin">3V3</td><td>3.3&nbsp;V only.</td></tr>
+          <tr><td class="chk"><input type="checkbox" id="c2" aria-label="GND wired"></td><td class="pin"><span class="sw" style="background:var(--w-gnd)"></span>GND</td><td class="pin">GND</td><td>Any GND pin on the ESP32.</td></tr>
+          <tr><td class="chk"><input type="checkbox" id="c3" aria-label="MOSI wired"></td><td class="pin"><span class="sw" style="background:var(--w-mosi)"></span>MOSI</td><td class="pin">D23</td><td>Printed <span class="mono">SI</span> on some boards.</td></tr>
+          <tr><td class="chk"><input type="checkbox" id="c4" aria-label="SCK wired"></td><td class="pin"><span class="sw" style="background:var(--w-sck)"></span>SCK</td><td class="pin">D18</td><td>Printed <span class="mono">SCLK</span> or <span class="mono">CLK</span> on some boards.</td></tr>
+          <tr><td class="chk"><input type="checkbox" id="c5" aria-label="MISO wired"></td><td class="pin"><span class="sw" style="background:var(--w-miso)"></span>MISO</td><td class="pin">D19</td><td>Printed <span class="mono">SO</span> on some boards.</td></tr>
+          <tr><td class="chk"><input type="checkbox" id="c6" aria-label="CSN wired"></td><td class="pin"><span class="sw" style="background:var(--w-cs)"></span>CSN</td><td class="pin">D5</td><td>Chip select. Printed <span class="mono">CS</span> on some boards.</td></tr>
+          <tr><td class="chk"><input type="checkbox" id="c7" aria-label="GDO0 wired"></td><td class="pin"><span class="sw" style="background:var(--w-gdo0)"></span>GDO0</td><td class="pin">D13</td><td>The radio data comes in here. D13 is on the <strong>other side</strong> of the ESP32 from the rest, near the bottom.</td></tr>
+          <tr><td class="chk"><input type="checkbox" id="c8" aria-label="GDO2 wired"></td><td class="pin"><span class="sw" style="background:var(--w-gdo2)"></span>GDO2</td><td class="pin">D4</td><td></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <p class="progress"><span id="count">0</span> of <span id="total">0</span> wires done <button class="reset" id="reset" type="button">Clear ticks</button></p>
+  </div>
+
+  <section>
+    <h2>First power-up: what you should see</h2>
+    <ol>
+      <li>The ESP32's <strong>blue LED blinks twice</strong>: the radio started.</li>
+      <li>The serial monitor prints <span class="mono">WiFi connected. Open http://rf433.local</span> and the ESP32's address, then <span class="mono">Listening on 433.92 MHz</span>.</li>
+      <li>Open <strong>http://rf433.local</strong> on your phone or computer (or the number address if that doesn't load; Android phones often need the number). Your weather station should show up under <strong>Weather and sensors</strong> within a minute or two.</li>
+      <li>Walk past the driveway sensor. It shows up under <strong>Alarms and remotes</strong>, the page flashes a red <strong>ALERT</strong> banner, and the blue LED stays on for 30 seconds.</li>
+      <li>Neighbors' sensors often show up too. That's normal at 433&nbsp;MHz. Give yours names so you can tell them apart (see below).</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>If nothing shows up</h2>
+    <ul>
+      <li>Check the module says <strong>433</strong> on the board or its bag. The 315, 868 and 915&nbsp;MHz versions look the same but hear 433&nbsp;MHz poorly.</li>
+      <li>Check GDO0 goes to D13. It's the wire that carries the radio signal, and it's the easiest one to put on the wrong side of the board.</li>
+      <li>Keep the antenna upright and a foot or so from the ESP32 and USB power supply.</li>
+      <li>If the driveway alarm still never appears, its code may be one rtl_433 doesn't know yet. Tell me the brand and model and I'll add it.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Naming your devices</h2>
+    <p>Each device on the web page has a gray ID under its name, like <span class="mono">Generic-Remote-12345</span>. Add it to the <span class="mono">NAMES</span> list near the top of <span class="mono">src/main.cpp</span>, or just send me the IDs and I'll do it:</p>
+    <pre>{"Generic-Remote-12345", "Driveway Alarm"},
+{"Acurite-5n1-1234-A",   "Weather Station"},</pre>
+  </section>
+
+  <section>
+    <h2>Uploading</h2>
+    <pre>cd ~/esp32_rf433
+~/.platformio/penv/bin/pio run -t upload -t monitor</pre>
+    <p class="muted">It uses the same Wi-Fi login as your lightning detector. Home Assistant picks up each device automatically once MQTT is filled in <span class="mono">src/secrets.h</span>.</p>
+  </section>
+</div>
+
+<script>
+  (function () {
+    var boxes = Array.prototype.slice.call(document.querySelectorAll('td.chk input'));
+    var KEY = 'rf433-wiring-ticks';
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+    function update() {
+      var done = 0;
+      boxes.forEach(function (b) {
+        b.closest('tr').classList.toggle('done', b.checked);
+        if (b.checked) done++;
+      });
+      document.getElementById('count').textContent = done;
+      document.getElementById('total').textContent = boxes.length;
+    }
+    function save() {
+      var s = {};
+      boxes.forEach(function (b) { if (b.checked) s[b.id] = 1; });
+      try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {}
+    }
+    boxes.forEach(function (b) {
+      b.checked = !!saved[b.id];
+      b.addEventListener('change', function () { update(); save(); });
+    });
+    document.getElementById('reset').addEventListener('click', function () {
+      boxes.forEach(function (b) { b.checked = false; });
+      update(); save();
+    });
+    update();
+  })();
+</script>
