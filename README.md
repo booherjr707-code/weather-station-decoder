@@ -25,6 +25,12 @@ model first.
 
 - ESP32-WROOM-32 dev board
 - CC1101 433 MHz module with SMA antenna (DWEII)
+- Wireless driveway alarm, 58 melodies, 500 ft range ([Amazon B0GTPRM7R1](https://www.amazon.com/dp/B0GTPRM7R1))
+
+Alarms like this one send a 24-bit EV1527 code. rtl_433 decodes those as
+`Generic-Remote`, but only at the timing it expects, so the program also has its own
+backup decoder that reads the code at any transmitter speed from about 200 to 800 µs
+per pulse. Either way the alarm shows up as `Generic-Remote-<number>`.
 
 ## Wiring
 

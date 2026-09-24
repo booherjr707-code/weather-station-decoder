@@ -56,6 +56,75 @@ void onRadioMessage(char* message) {
   xQueueSend(rfQueue, message, 0);
 }
 
+// ---------- Backup decoder for driveway alarms ----------
+// Most driveway alarms and doorbells (including the 58-melody, 500 ft kind)
+// send a 24-bit code from an EV1527 chip. rtl_433 decodes these as
+// "Generic-Remote", but only when the chip's timing is close to what it expects
+// (short pulses of roughly 400-530 us). Cheap transmitters run anywhere from
+// about 200 to 700 us, so this decodes the same code at any speed in that range
+// and reports it under the same name. When both decoders catch a signal, the
+// repeat filter in handleMessage() keeps just one.
+
+// Reads one 24-bit frame starting at pulse `start`. Each bit is a short and a
+// long part (1:3); a long pulse is a 1. The frame ends with a short sync pulse.
+bool decodeEv1527Frame(const int* pulse, const int* gap, unsigned n, unsigned start,
+                       uint32_t& code) {
+  if (start + 25 > n) return false;
+  int period = pulse[start] + gap[start];
+  if (period < 700 || period > 3200) return false;
+  code = 0;
+  for (unsigned k = 0; k < 24; k++) {
+    int p = pulse[start + k], g = gap[start + k];
+    if (abs(p + g - period) > period / 4) return false;
+    if (max(p, g) < 2 * min(p, g)) return false;
+    code = (code << 1) | (p > g ? 1 : 0);
+  }
+  unsigned sync = start + 24;
+  if (pulse[sync] > period / 2) return false;
+  // The sync gap is about 31 short pulses long, unless the signal ends here.
+  if (sync + 1 < n && gap[sync] < period * 4) return false;
+  return true;
+}
+
+// Called by the radio's decoder task with every signal it received.
+void onRawPulses(const int* pulse, const int* gap, unsigned int n,
+                 unsigned long duration, int rssi) {
+  static uint32_t lastCode = 0, lastMs = 0;
+  static int matches = 0;
+  for (unsigned i = 0; i + 25 <= n; i++) {
+    uint32_t code;
+    if (!decodeEv1527Frame(pulse, gap, n, i, code)) continue;
+    i += 24;
+    uint32_t id = code >> 8, cmd = code & 0xFF;
+    if (id == 0 || cmd == 0) continue;  // same false-positive checks as rtl_433
+
+    // Transmitters repeat the frame many times. Require two matching frames to
+    // rule out noise, then report once per burst.
+    uint32_t now = millis();
+    if (code == lastCode && now - lastMs < 1000) {
+      matches++;
+    } else {
+      matches = 1;
+    }
+    lastCode = code;
+    lastMs = now;
+    if (matches != 2) continue;
+
+    char tristate[13];
+    const char TRI[] = {'0', 'Z', 'X', '1'};
+    for (int b = 0; b < 12; b++) tristate[b] = TRI[(code >> (22 - 2 * b)) & 3];
+    tristate[12] = 0;
+    char msg[160];
+    snprintf(msg, sizeof(msg),
+             "{\"model\":\"Generic-Remote\",\"id\":%u,\"cmd\":%u,\"tristate\":\"%s\","
+             "\"rssi\":%d,\"protocol\":\"EV1527 backup decoder\"}",
+             id, cmd, tristate, rssi);
+    static char item[MSG_SIZE];
+    strlcpy(item, msg, sizeof(item));
+    xQueueSend(rfQueue, item, 0);
+  }
+}
+
 // ---------- Devices ----------
 
 // Readings rtl_433 can report, with how to show them in Home Assistant.
@@ -509,6 +578,7 @@ void setup() {
   rfQueue = xQueueCreate(6, MSG_SIZE);
   rf.initReceiver(RF_MODULE_RECEIVER_GPIO, RF_MODULE_FREQUENCY);
   rf.setCallback(onRadioMessage, rfBuffer, MSG_SIZE);
+  rf.setRawPulsesCallback(onRawPulses);
   rf.enableReceiver();
   rf.getModuleStatus();
   Serial.println("Listening on 433.92 MHz");
