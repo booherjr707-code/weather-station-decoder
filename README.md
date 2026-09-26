@@ -1,4 +1,6 @@
-# ESP32 433 MHz Receiver
+# Weather Station Decoder
+
+Turn your 433 MHz weather station into a fully integrated Home Assistant sensor.
 
 An ESP32 with a CC1101 radio that listens on 433.92 MHz and decodes the driveway
 alarm and the weather station. It uses [rtl_433_ESP](https://github.com/NorthernMan54/rtl_433_ESP),
@@ -56,6 +58,37 @@ Open `WIRING.html` in a browser for the diagram and a checklist.
 | GDO0 | D13 |
 | GDO2 | D4 |
 
+## ESP32-S3 version
+
+The `esp32-s3` environment in `platformio.ini` is set up for an ESP32-S3-N16R8 board
+(16 MB flash, 8 MB PSRAM) and is the one tested end to end. Build it with
+`pio run -e esp32-s3 -t upload`. Wiring for the S3:
+
+| CC1101 | ESP32-S3 |
+|---|---|
+| VCC | 3V3 (not 5V) |
+| GND | GND |
+| CSN / CS | GPIO10 |
+| MOSI / SI | GPIO11 |
+| SCK | GPIO12 |
+| MISO / SO | GPIO13 |
+| GDO0 | GPIO4 |
+| GDO2 | GPIO5 |
+
+Notes from getting it running:
+
+- **Keep the CC1101 and its antenna at least 8 inches from the ESP32**, antenna pointing
+  straight up. Next to the ESP32 the radio hears its electrical noise instead of the
+  weather station. Long jumper wires or a small box for the radio fix this.
+- **Some CC1101 clone modules report chip version 0x07**, which RadioLib rejects with
+  "chip not found" (error -2). `patch_radiolib.py` runs before the build and adds 0x07 to
+  the versions RadioLib accepts.
+- **Uploading over the S3's native USB port:** if the upload can't connect, hold BOOT,
+  tap RESET, release BOOT and try again. On a Mac, approve the "allow accessory" prompt.
+  If the board then stays in upload mode, unplug it and plug it back in without holding
+  any button.
+- **Don't put GPIO 35, 36 or 37 to use**: the 8 MB PSRAM takes them.
+
 ## Setup
 
 1. Install [PlatformIO](https://platformio.org/).
@@ -82,5 +115,6 @@ const FriendlyName NAMES[] = {
 
 ## Credits
 
-Written by [Claude Code](https://claude.com/claude-code), Anthropic's AI coding
-assistant, for James Booher's ESP32 weather projects.
+Created by [Claude Code](https://claude.com/claude-code), Anthropic's AI coding
+assistant, for James Booher's ESP32 weather projects. Claude Code wrote the code,
+the wiring guide and this README, and tested it on a real ESP32-S3 with a CC1101.
